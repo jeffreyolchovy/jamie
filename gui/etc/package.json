@@ -1,0 +1,8 @@
+{ "name": "jamie-gui",
+  "version": "0.1.0",
+  "dependencies": {
+    "typescript"    : "3.2.2",
+    "stylus"        : "0.54.5",
+    "nib"           : "1.1.2"
+  }
+}

@@ -1,0 +1,282 @@
+@import 'nib'
+
+global-reset()
+
+*
+  box-sizing border-box
+  -webkit-text-size-adjust none
+
+input, a, button, ul
+  -webkit-tap-highlight-color transparent
+
+html
+  overflow-y scroll
+
+body
+  font 15px/22px sans-serif
+
+button
+  background-image linear-gradient(top, #fff4, #fff0)
+  background-color #ccc
+  border 1px solid #333
+  border-radius 6px
+  box-shadow inset 0 1px 0 #fff4, 0 1px 1px #0002, -1px 2px 5px #0003
+  color #333
+  display block
+  font 15px/38px sans-serif
+  height 40px
+  margin 0 0 1em
+  padding 0
+  text-align center
+  text-shadow 0 1px 0 #fff8
+  width 100%
+
+  &:hover
+    cursor pointer
+
+  &:active
+    background-color darken(#d3d3d3, 5%)
+    box-shadow inset 0 1px 2px #0002
+
+  &.attent
+    background-color #c4df9b
+    border-color #598527
+    color #314121
+
+    &:active
+      background-color darken(@background-color, 10%)
+
+#app
+  margin 1em
+
+  .hd
+    .nav
+      overflow hidden
+
+    li
+      background-color #ccc
+      width 33.33%
+      padding 5px 0
+      float left
+      list-style-type decimal
+      list-style-position inside
+      color darken(@background-color, 50%)
+      text-indent 1em
+      box-sizing border-box
+      border-left 1px solid #fff
+      border-right 1px solid #fff
+
+      &:first-child
+        border-left none
+        border-right 2px solid #fff
+
+      &:last-child
+        border-left 2px solid #fff
+        border-right none
+
+      &.selected
+        background orange
+        color #333
+        text-shadow 0 1px 0 #0003
+
+.step
+  margin 1em 0
+  color #444
+
+  p, a
+    font-family 'Helvetica Neue', sans-serif
+
+  a
+    text-decoration underline
+    color #33b
+
+    &:hover
+      cursor pointer
+
+  em
+    font-style italic
+
+  .hd
+    margin 0 0.5em
+
+  .ft
+    margin 0.5em 0
+
+  .hd, .ft
+    p
+      margin 0 0 1em
+
+  .bd
+      margin 1em 0
+
+.step-form
+  .lineup
+    margin 0 0 1em
+
+    .name
+      color #777
+      font-size 15px
+
+  .form-inputs
+    .player
+      overflow hidden
+      padding 0.5em
+      border 1px solid #aaa
+
+      .name
+        float left
+        margin-right 1em
+
+        input
+          color #777
+          border none
+          font-size 15px
+
+        input::-webkit-input-placeholder
+          color #aaa
+
+        input:-moz-placeholder
+          color #aaa
+
+      .stats
+        float left
+        overflow hidden
+
+        li
+          overflow hidden
+          float left
+          margin-right 0.5em
+
+          span
+            display inline-block
+            font-family monospace
+            background #aaa
+            line-height 20px
+            height 24px
+            color #fff
+            vertical-align middle
+            padding 2px 4px
+
+          input
+            width 2em
+            height 24px
+            padding 0 2px
+            border 3px solid #aaa
+            border-left none
+            font-size 13px
+            color #777
+            vertical-align middle
+            box-sizing border-box
+
+      &:first-child
+        border-radius 0 6px 0 0
+
+      &:last-child
+        border-radius 0 0 0 6px
+
+      &:only-child
+        border-radius 0 6px 0 6px
+
+    .player + .player
+      border-top none
+
+    .specs
+      box-sizing border-box
+
+    .spec
+      overflow hidden
+      padding 0 0 0 0.5em
+      border 1px solid #aaa
+
+      span.index
+        display block
+        float left
+        line-height 32px
+        padding: 8px 0;
+        margin-right 0.5em
+
+      span.input
+        display block
+        overflow hidden
+
+      input
+        box-sizing border-box
+
+      &:first-child
+        border-radius 0 6px 0 0
+
+      &:last-child
+        border-radius 0 0 0 6px
+
+      &:only-child
+        border-radius 0 6px 0 6px
+
+    .spec + .spec
+      border-top none
+
+  .form-control
+    overflow hidden
+
+    .button-wrapper
+      float right
+
+      button
+        float left
+        width 3em
+        font-size 16px
+        font-family monospace
+
+  .form-navigation
+    overflow hidden
+    padding-top 1em
+    border-top 1px solid #aaa
+
+    .button-wrapper
+      float right
+
+      button
+        width 100px
+
+    .anchor-wrapper
+      float left
+
+.spinner
+  @keyframes spinner-animation {
+    to {transform: rotate(360deg);}
+  }
+
+  .spinner-animation:before
+    content ''
+    box-sizing border-box
+    position absolute
+    top 50%
+    left 50%
+    width 20px
+    height 20px
+    margin-top -10px
+    margin-left -10px
+    border-radius 50%
+    border 2px solid #ccc
+    border-top-color #666
+    animation: spinner-animation .6s linear infinite
+
+  .spinner-container
+    position relative
+    width 20px
+    height 20px
+
+  span.text
+    display inline-block
+    color #666
+
+  .table
+    display table
+
+    .record
+      display table-cell
+      vertical-align middle
+      overflow hidden
+
+      .entry
+        float left
+        margin-right 0.5em
