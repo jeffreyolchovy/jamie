@@ -19,7 +19,7 @@ case class WebAppServer(port: Int) extends Server {
   val service = ExceptionHandlingFilter andThen RoutingService.byMethodAndPathObject {
     case Method.Get -> Root => new IndexHandler
     case Method.Get -> Root / "assets" / ("scripts" | "styles") / _ => AssetsHandler
-    case Method.Get -> Root / "assets" / "scripts" / "third-party" / _ => AssetsHandler
+    case Method.Get -> Root / "assets" / ("scripts" | "styles") / "third-party" / _ => AssetsHandler
     case Method.Post -> Root / "api" / "example" => new ExampleHandler
   }
 }
@@ -52,14 +52,23 @@ object WebAppServer {
       head(
         title("Pull that up, Jamie"),
         meta(charset := "utf-8"),
+        link(href := "/assets/styles/third-party/flex-layout-attribute_1.0.3.min.css", rel := "stylesheet"),
         link(href := "/assets/styles/main.css", rel := "stylesheet")
       ),
       body(
-        div(
-          id := "app",
-          div(id := "controls"),
-          div(id := "caption-pane"),
-          div(id := "preview-pane"),
+        tag("main")(
+          tag("section")(
+            attr("layout") := "column",
+            div(
+              attr("layout") := "row stretch-stretch",
+              div(id := "controls", "Audio input")
+            ),
+            div(
+              attr("layout") := "rows lg-column stretch-stretch",
+              div(id := "transcript-pane", "Transcript"),
+              div(id := "entity-pane", "Entities")
+            )
+          )
         ),
         script(src := "/assets/scripts/main.js"),
         script(
