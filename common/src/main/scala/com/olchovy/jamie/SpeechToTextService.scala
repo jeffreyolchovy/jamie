@@ -1,109 +1,102 @@
 package com.olchovy.jamie
 
 import java.io.InputStream
-import scala.collection.JavaConverters._
-import scala.collection.mutable.Buffer
 import scala.concurrent.{ExecutionContext, Future, Promise}
-import com.google.api.gax.rpc.ResponseObserver
-import com.google.api.gax.rpc.StreamController
-import com.google.cloud.speech.v1.RecognitionAudio
-import com.google.cloud.speech.v1.RecognitionConfig
-import com.google.cloud.speech.v1.SpeechClient
-import com.google.cloud.speech.v1.StreamingRecognitionConfig
-import com.google.cloud.speech.v1.StreamingRecognizeRequest
-import com.google.cloud.speech.v1.StreamingRecognizeResponse
+import scala.util.Try
+import com.google.api.gax.rpc.{
+  ClientStream,
+  ResponseObserver,
+  StreamController
+}
+import com.google.cloud.speech.v1.{
+  RecognitionAudio,
+  RecognitionConfig,
+  SpeechClient,
+  StreamingRecognitionConfig,
+  StreamingRecognizeRequest,
+  StreamingRecognizeResponse
+}
 import com.google.protobuf.ByteString
+import com.olchovy.util.BackgroundResourceUtils
 
 object SpeechToTextService {
 
-  implicit val ec = ExecutionContext.global
+  val DefaultEncoding = RecognitionConfig.AudioEncoding.FLAC
 
-  // non-streaming, synchronous invocation (only for testing...)
-  def apply(stream: InputStream): Unit = {
-    val client = SpeechClient.create()
-    val config = RecognitionConfig.newBuilder()
-      .setEncoding(RecognitionConfig.AudioEncoding.FLAC)
-      .setLanguageCode("en-US")
-      .setSampleRateHertz(44100)
-      .setModel("default")
-      //.setEnableSpeakerDiarization(true) // not yet available in v1 (try v1p1beta?)
-      //.setDiarizationSpeakerCount(2)
-      .setEnableAutomaticPunctuation(true)
-      .setEnableWordTimeOffsets(true)
-      .build()
-    val audioBytes = ByteString.readFrom(stream)
-    val audio = RecognitionAudio.newBuilder()
-      .setContent(audioBytes)
-      .build()
-    // Use blocking call to get audio transcript
-    val response = client.recognize(config, audio)
-    val results = response.getResultsList.asScala
+  val DefaultLanguageCode = "en-US"
 
-    for (result <- results) {
-      val alternative = result.getAlternativesList.get(0)
-      println(s"Transcript: ${alternative.getTranscript}")
+  val DefaultSampleRate = 44100
+
+  def stream(stream: InputStream)(implicit ec: ExecutionContext): Future[Seq[String]] = {
+    val clientOrError = Try(SpeechClient.create())
+    val future = for {
+      client <- Future.fromTry(clientOrError)
+      recognitionConfig = RecognitionConfig.newBuilder()
+        .setEncoding(DefaultEncoding)
+        .setLanguageCode(DefaultLanguageCode)
+        .setSampleRateHertz(DefaultSampleRate)
+        //.setEnableSpeakerDiarization(true) // not yet available in v1 (try v1p1beta?)
+        //.setDiarizationSpeakerCount(2)
+        .setEnableAutomaticPunctuation(true)
+        .setEnableWordTimeOffsets(true)
+        .build()
+      streamingConfig = StreamingRecognitionConfig.newBuilder()
+        .setConfig(recognitionConfig)
+        .build()
+      responseObserver = new ResponseObserver[StreamingRecognizeResponse] {
+        val promise = Promise[Seq[StreamingRecognizeResponse]]
+        val buffer = Seq.newBuilder[StreamingRecognizeResponse]
+        def future = promise.future
+        def onStart(controller: StreamController): Unit = {}
+        def onResponse(response: StreamingRecognizeResponse): Unit = buffer += response
+        def onError(err: Throwable): Unit = promise.failure(err)
+        def onComplete(): Unit = promise.success(buffer.result)
+      }
+      callable = client.streamingRecognizeCallable()
+      clientStream = callable.splitCall(responseObserver)
+      _ <- Future.fromTry(transmitAudioStream(streamingConfig, clientStream, stream))
+      responses <- responseObserver.future
+    } yield for {
+      response <- responses
+      result = response.getResultsList.get(0)
+      alternative = result.getAlternativesList.get(0)
+    } yield {
+      alternative.getTranscript
     }
+    future.onComplete { _ =>
+      clientOrError.foreach(BackgroundResourceUtils.blockUntilShutdown(_))
+    }
+    future
   }
 
-  def stream(stream: InputStream): Unit = {
-    val client = SpeechClient.create()
-
-    val recConfig = RecognitionConfig.newBuilder()
-      .setEncoding(RecognitionConfig.AudioEncoding.FLAC)
-      .setLanguageCode("en-US")
-      .setSampleRateHertz(44100)
-      .setModel("default")
-      //.setEnableSpeakerDiarization(true) // not yet available in v1 (try v1p1beta?)
-      //.setDiarizationSpeakerCount(2)
-      .setEnableAutomaticPunctuation(true)
-      .setEnableWordTimeOffsets(true)
-      .build()
-
-    val config = StreamingRecognitionConfig.newBuilder()
-      .setConfig(recConfig)
-      .build()
-
-    val responseObserver = new ResponseObserver[StreamingRecognizeResponse] {
-      val promise = Promise[Seq[StreamingRecognizeResponse]]
-      val messages = Buffer.empty[StreamingRecognizeResponse]
-      def future = promise.future
-      def onStart(controller: StreamController): Unit = {}
-      def onResponse(message: StreamingRecognizeResponse): Unit = { messages += message }
-      def onError(err: Throwable): Unit = { promise.failure(err) }
-      def onComplete(): Unit = { promise.success(messages.toSeq) }
-    }
-
-    val callable = client.streamingRecognizeCallable()
-
-    val clientStream = callable.splitCall(responseObserver)
-
-    try {
-      // The first request must **only** contain the audio configuration:
-      clientStream.send(
-        StreamingRecognizeRequest.newBuilder().setStreamingConfig(config).build()
-      )
-
-      // Subsequent requests must **only** contain the audio data.
-      val buffer = new Array[Byte](128 * 1024)
-      while (stream.read(buffer) != -1) {
-        clientStream.send(
+  private def transmitAudioStream(
+    config: StreamingRecognitionConfig,
+    client: ClientStream[StreamingRecognizeRequest],
+    stream: InputStream,
+    bufferSize: Int = 128 * 1024
+  ): Try[Unit] = {
+    for {
+      _ <- Try {
+        // The first request must **only** contain the audio configuration:
+        client.send(
           StreamingRecognizeRequest.newBuilder()
-            .setAudioContent(ByteString.copyFrom(buffer))
+            .setStreamingConfig(config)
             .build()
         )
       }
-    } finally {
-      clientStream.closeSend()
-      client.shutdown()
-    }
-
-    for {
-      responses <- responseObserver.future
-      response <- responses
-    } {
-      val result = response.getResultsList().get(0)
-      val alternative = result.getAlternativesList().get(0)
-      println(s"Transcript: ${alternative.getTranscript}")
+      buffer = new Array[Byte](bufferSize)
+      _ <- Try {
+        // Subsequent requests must **only** contain the audio data.
+        while (stream.read(buffer) >= 0) {
+          client.send(
+            StreamingRecognizeRequest.newBuilder()
+              .setAudioContent(ByteString.copyFrom(buffer))
+              .build()
+          )
+        }
+      }
+    } yield {
+      client.closeSend()
     }
   }
 }

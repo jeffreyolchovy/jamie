@@ -1,6 +1,9 @@
 package com.olchovy.jamie
 
+import java.net.URL
 import scala.collection.JavaConverters._
+import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.util.Try
 import com.google.cloud.language.v1.{
   AnalyzeEntitiesRequest,
   AnalyzeEntitiesResponse,
@@ -10,35 +13,40 @@ import com.google.cloud.language.v1.{
   EntityMention,
   LanguageServiceClient
 }
+import com.olchovy.util.BackgroundResourceUtils
+import com.olchovy.util.FutureConverters._
 
 object EntityDetectionService {
 
-  def apply(text: String): Unit = {
-    // Instantiate the Language client (com.google.cloud.language.v1.LanguageServiceClient)
-    val client = LanguageServiceClient.create()
-    val doc = Document.newBuilder()
+  private object EntityMetadataKeys {
+    val WikipediaUrl = "wikipedia_url"
+  }
+
+  def apply(text: String)(implicit ece: ExecutionContextExecutor): Future[Map[String, URL]] = {
+    val clientOrError = Try(LanguageServiceClient.create())
+    val document = Document.newBuilder()
       .setContent(text)
       .setType(Document.Type.PLAIN_TEXT)
       .build()
     val request = AnalyzeEntitiesRequest.newBuilder()
-      .setDocument(doc)
+      .setDocument(document)
       .setEncodingType(EncodingType.UTF16)
       .build()
-    val response = client.analyzeEntities(request)
-
-    // Print the response
-    for (entity <- response.getEntitiesList.asScala) {
-      println(s"Entity: ${entity.getName()}")
-      println(s"Salience: ${entity.getSalience()}")
-      println("Metadata: ")
-      for (entry <- entity.getMetadataMap.entrySet.asScala) {
-        println(s"${entry.getKey}: ${entry.getValue}")
-      }
-      for (mention <- entity.getMentionsList.asScala) {
-        println(s"Begin offset: ${mention.getText.getBeginOffset}")
-        println(s"Content: ${mention.getText.getContent}")
-        println(s"Type: ${mention.getType}")
-      }
+    val future: Future[Map[String, URL]] = for {
+      client <- Future.fromTry(clientOrError)
+      response <- client.analyzeEntitiesCallable.futureCall(request)
+    } yield (for {
+      entity <- response.getEntitiesList.asScala
+      name = entity.getName
+      entries = entity.getMetadataMap.asScala
+      entry <- entries if entries.contains(EntityMetadataKeys.WikipediaUrl)
+      (key, value) = entry if key == EntityMetadataKeys.WikipediaUrl
+    } yield {
+      name -> new URL(value)
+    })(scala.collection.breakOut)
+    future.onComplete { _ =>
+      clientOrError.foreach(BackgroundResourceUtils.blockUntilShutdown(_))
     }
+    future
   }
 }
