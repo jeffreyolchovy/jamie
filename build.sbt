@@ -12,7 +12,9 @@ cancelable in Global := true
 lazy val root = (project in file(".")).aggregate(common, api, gui)
 
 val common = (project in file("common"))
+  .configs(IntegrationTest)
   .settings(
+    Defaults.itSettings,
     libraryDependencies ++= Seq(
       "org.slf4j" % "slf4j-api" % "1.7.25",
       "org.json4s" %% "json4s-native" % "3.5.2",
@@ -22,8 +24,8 @@ val common = (project in file("common"))
       "com.google.cloud" % "google-cloud-speech" % "0.74.0-beta",
       "io.grpc" % "grpc-netty-shaded" % "1.17.1",
       "io.netty" % "netty-tcnative-boringssl-static" % "2.0.20.Final" classifier "osx-x86_64",
-      "org.scalatest" %% "scalatest"  % "3.0.1" % Test,
-      "ch.qos.logback" % "logback-classic" % "1.2.3" % Test
+      "org.scalatest" %% "scalatest"  % "3.0.1" % "it,test",
+      "ch.qos.logback" % "logback-classic" % "1.2.3" % "it,test"
     )
   )
 
