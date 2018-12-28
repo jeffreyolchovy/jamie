@@ -70,6 +70,7 @@ object WebAppServer {
             )
           )
         ),
+        script(src := "/assets/scripts/third-party/zepto-1.2.0.min.js"),
         script(src := "/assets/scripts/main.js"),
         script(
           """
