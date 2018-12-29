@@ -2,22 +2,47 @@
 
 body
   font 15px/22px sans-serif
-  height 100%
 
-section
-  min-height 80vh
-
-div
-  margin 0 0 1rem
-
-div div
+.row
+  clear both
   margin 0
+  padding 0
 
-#controls
+.row:before, .row:after
+  content ""
+  display table
+
+.row:after
+  clear both
+
+.col
+  display block
+  float left
+  margin 1% 0 1% 1%
+
+  @media only screen and (max-width: 720px)
+    margin 1% 0
+
+.col:first-child
+  margin-left 0
+
+.span_2_of_2
+  width 100%
+
+.span_1_of_2
+  width 49.5%
+
+  @media only screen and (max-width: 720px)
+    width 100%
+
+#audio-selection
   background-color #ecc
+  min-height 20vmin
 
 #transcript-pane
   background-color #cec
+  height 70vmin
 
 #entity-pane
   background-color #cce
+  height 70vmin
