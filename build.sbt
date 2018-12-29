@@ -42,7 +42,6 @@ val api = (project in file("api"))
 
 val gui = (project in file("gui"))
   .settings(
-    libraryDependencies += "com.lihaoyi" %% "scalatags" % "0.6.5",
     fork in (Compile, run) := true,
     mainClass in (Compile, run) := Some("com.olchovy.jamie.WebAppServer")
   )
