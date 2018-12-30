@@ -1,17 +1,34 @@
 # "Pull that up, Jamie"
-*Short description*
+Programmatically transcribe audio streams and surface the well-known entities contained therein.
 
-<!-- ![GUI step #1 screenshot](https://github.com/jeffreyolchovy/jamie/raw/master/screenshots/1.png) -->
-<!-- #![GUI step #2 screenshot](https://github.com/jeffreyolchovy/jamie/raw/master/screenshots/2.png) -->
+Inspired by producer Jamie Vernon's incidental annotating and fact-checking responsibilities on the [Joe Rogan Experience](http://podcasts.joerogan.net/) podcast.
+
+![WIP GUI screenshot](https://github.com/jeffreyolchovy/jamie/raw/master/screenshots/wip.png)
+
+## Installation requirements
+- [sbt 1.x](https://www.scala-sbt.org)
+- A local installation of [Node.js](https://nodejs.org) and [npm](https://www.npmjs.com)
+- A local installation of [SoX](http://sox.sourceforge.net/)
+- A Google Could Platform (GCP) project with the [Cloud Speech-to-Text](https://cloud.google.com/speech-to-text/) and [Natural Language](https://cloud.google.com/natural-language/) APIs enabled
 
 ## Usage
-Front-end/GUI (node/npm) dependencies are downloaded via sbt.
-
-From an interactive sbt session, issue:
+Ensure that your local environment is targeting the desired GCP project:
+```sh
+$ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/project/credentials.json
 ```
+
+From the project root, begin an interactive sbt session:
+```sh
+$ sbt
+```
+
+From the interactive sbt session, issue:
+```sbt
 > project gui
 > run --port 8080
 ```
+
+Front-end/GUI (node/npm) dependencies will be downloaded via sbt.
 
 Visit http://localhost:8080 in a browser to begin processing an audio stream.
 
