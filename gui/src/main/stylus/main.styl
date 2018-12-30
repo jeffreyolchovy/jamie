@@ -1,7 +1,26 @@
 @import 'nib'
 
+global-reset()
+
 body
+  color #333
   font 15px/22px sans-serif
+
+main
+  margin 0 1%
+
+footer
+  border-top 1px solid #333
+  overflow auto
+
+footer p
+  float right
+
+footer p + p
+  float left
+
+p
+  margin 0
 
 .row
   clear both
@@ -35,14 +54,68 @@ body
   @media only screen and (max-width: 720px)
     width 100%
 
+.button
+  background-image linear-gradient(top, #fff8, #fffa)
+  background-color #ccc
+  border 1px solid #333
+  border-radius 6px
+  box-shadow inset 0 1px 0 #fff8, 0 1px 1px #0002, -1px 2px 3px #0003
+  color #333
+  display block
+  font 15px/28px sans-serif
+  height 30px
+  margin 0 0 1rem
+  padding 0
+  text-align center
+  text-shadow 0 1px 0 #fff0
+  width 100%
+
+  &:hover
+    cursor pointer
+
+  &:active
+    background-color darken(#d3d3d3, 5%)
+    box-shadow inset 0 1px 2px #0002
+
+  &.button-pressed
+    background-color #c4df9b
+    border-color #598527
+    color #314121
+
+.hidden-form-control
+  width 0.1px
+  height 0.1px
+  opacity 0
+  overflow hidden
+  position absolute
+  z-index -1
+
 #audio-selection
-  background-color #ecc
-  min-height 20vmin
+  border-bottom 1px solid #ccc
+  overflow auto
 
-#transcript-pane
-  background-color #cec
-  height 70vmin
+#audio-selection p
+  margin 0 0 1rem
 
-#entity-pane
-  background-color #cce
+#audio-selection fieldset
+  margin 0 0 0.3rem
+
+#audio-selection fieldset input[type=radio]
+  display block
+
+#audio-selection fieldset label.button
+  display block
+  float left
+  margin 0 1rem 0 0
+  width 20%
+
+#transcript-pane, #entity-pane
   height 70vmin
+  overflow scroll
+
+#transcript-pane p
+  margin 0 0 1rem
+
+#entity-pane iframe
+  height 100%
+  width 100%

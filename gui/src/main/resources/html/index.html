@@ -8,25 +8,21 @@
   <body>
     <main>
       <section class="row">
-        <div class="col span_2_of_2">
-          <p>Select an audio stream from the choices below, or upload a file from your computer.</p>
-        </div>
-      </section>
-
-      <section class="row">
         <form id="audio-selection" name="audio-selection">
-          <div class="col span_1_of_2">
+          <div class="col span_2_of_2">
+            <p>Select an audio stream from the choices below, or upload a file from your computer.</p>
             <fieldset id="audio-streams">
-              <label>Available episodes</label>
-              <input type="radio" id="audio-stream-e1219" name="audio-stream" value="e1219"/>
-              <label for="audio-stream-e1219">Episode #1219: Bill Burr</label>
-            </fieldset>
-          </div>
+              <input class="hidden-form-control" type="radio" id="audio-stream-e1218" name="audio-stream" value="e1218" onclick="transcribe()"/>
+              <label class="button" for="audio-stream-e1218">1218: Gad Saad</label>
 
-          <div class="col span_1_of_2">
-            <fieldset id="audio-upload">
-              <label for="audio-upload">Upload an audio file</label>
-              <input type="file" name="audio-upload"/>
+
+              <input class="hidden-form-control" type="radio" id="audio-stream-e1219" name="audio-stream" value="e1219" onclick="transcribe()"/>
+              <label class="button button-pressed" for="audio-stream-e1219">1219: Bill Burr</label>
+
+              <input class="hidden-form-control" type="radio" id="audio-stream-e1220" name="audio-stream" value="e1220" onclick="transcribe()"/>
+              <label class="button" for="audio-stream-e1220">1220: Joey Diaz</label>
+              <label class="button" for="audio-upload">Upload an audio file</label>
+              <input class="hidden-form-control" type="file" id="audio-upload" name="audio-upload"/>
             </fieldset>
           </div>
         </form>
@@ -36,7 +32,7 @@
         <div class="col span_1_of_2" id="transcript-pane"></div>
 
         <div class="col span_1_of_2" id="entity-pane">
-          <iframe id="entity-iframe" frameborder="0"></iframe>
+          <iframe id="entity-iframe" name="entity-iframe" frameborder="0"></iframe>
         </div>
       </section>
 
