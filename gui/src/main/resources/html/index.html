@@ -12,15 +12,21 @@
           <div class="col span_2_of_2">
             <p>Select an audio stream from the choices below, or upload a file from your computer.</p>
             <fieldset id="audio-streams">
-              <input class="hidden-form-control" type="radio" id="audio-stream-e1218" name="audio-stream" value="e1218" onclick="transcribe()"/>
+              <input class="hidden-form-control" type="radio"
+                id="audio-stream-e1218" name="audio-stream"
+                value="e1218" onclick="transcribe(event)"/>
               <label class="button" for="audio-stream-e1218">1218: Gad Saad</label>
 
+              <input class="hidden-form-control" type="radio"
+                id="audio-stream-e1219" name="audio-stream"
+                value="e1219" onclick="transcribe(event)"/>
+              <label class="button" for="audio-stream-e1219">1219: Bill Burr</label>
 
-              <input class="hidden-form-control" type="radio" id="audio-stream-e1219" name="audio-stream" value="e1219" onclick="transcribe()"/>
-              <label class="button button-pressed" for="audio-stream-e1219">1219: Bill Burr</label>
-
-              <input class="hidden-form-control" type="radio" id="audio-stream-e1220" name="audio-stream" value="e1220" onclick="transcribe()"/>
+              <input class="hidden-form-control" type="radio"
+                id="audio-stream-e1220" name="audio-stream"
+                value="e1220" onclick="transcribe(event)"/>
               <label class="button" for="audio-stream-e1220">1220: Joey Diaz</label>
+
               <label class="button" for="audio-upload">Upload an audio file</label>
               <input class="hidden-form-control" type="file" id="audio-upload" name="audio-upload"/>
             </fieldset>
