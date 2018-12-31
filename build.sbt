@@ -17,9 +17,9 @@ val common = (project in file("common"))
     Defaults.itSettings,
     libraryDependencies ++= Seq(
       "org.slf4j" % "slf4j-api" % "1.7.25",
-      "org.json4s" %% "json4s-native" % "3.5.2",
-      "com.twitter" %% "finagle-core" % "6.44.0",
-      "com.twitter" %% "finagle-http" % "6.44.0",
+      "org.json4s" %% "json4s-native" % "3.6.3",
+      "com.twitter" %% "finagle-core" % "18.12.0",
+      "com.twitter" %% "finagle-http" % "18.12.0",
       "com.google.cloud" % "google-cloud-language" % "1.56.0",
       "com.google.cloud" % "google-cloud-speech" % "0.74.0-beta",
       "io.grpc" % "grpc-netty-shaded" % "1.17.1",
