@@ -21,7 +21,7 @@ class EntityDetectionServiceSpec extends AsyncFlatSpec with Matchers with Before
 
   it should "detect well-known entities in text input" in {
     val input = "The president of the United States of America lives in the White House."
-    val expectedEntities = Set("United States of America", "White House")
+    val expectedEntities = Set("president", "United States of America", "White House")
     for {
       result <- EntityDetectionService(input)
     } yield {

@@ -38,15 +38,21 @@ object EntityDetectionService {
     } yield (for {
       entity <- response.getEntitiesList.asScala
       name = entity.getName
-      entries = entity.getMetadataMap.asScala
-      entry <- entries if entries.contains(EntityMetadataKeys.WikipediaUrl)
-      (key, value) = entry if key == EntityMetadataKeys.WikipediaUrl
+      metadata = entity.getMetadataMap.asScala
     } yield {
-      name -> new URL(value)
+      val url = metadata.get(EntityMetadataKeys.WikipediaUrl) match {
+        case Some(value) => new URL(value)
+        case None => googleSearchUrl(name)
+      }
+      name -> url
     })(scala.collection.breakOut)
     future.onComplete { _ =>
       clientOrError.foreach(BackgroundResourceUtils.blockUntilShutdown(_))
     }
     future
+  }
+
+  private def googleSearchUrl(query: String): URL = {
+    new URL(s"https://www.google.com/search?q=%22$query%22")
   }
 }
