@@ -14,7 +14,7 @@ case class ApiServer(port: Int)(implicit ece: ExecutionContextExecutor) extends 
   import ApiServer._
 
   val service = ExceptionHandlingFilter andThen RoutingService.byMethodAndPathObject {
-    case (Method.Post | Method.Get) -> Root / "transcript" => new TranscriptHandler
+    case (Method.Get | Method.Post) -> Root / "transcript" => new TranscriptHandler
     case Method.Get -> Root / "entities" => new EntitiesHandler
   }
 }

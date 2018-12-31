@@ -1,5 +1,6 @@
 package com.olchovy.jamie
 
+import java.io.InputStream
 import java.util.concurrent.Executors
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.util.control.NonFatal
@@ -42,21 +43,24 @@ object WebAppServer {
     }
   }
 
+  private def respondWithStream(response: Response, stream: InputStream): Future[Response] = {
+    response.withOutputStream(StreamIO.copy(stream, _))
+    Future.value(response)
+  }
+
   object IndexHandler extends Service[Request, Response] {
     def apply(request: Request) = {
-      val stream = getClass.getResourceAsStream("/html/index.html")
       val response = Response(request.version, Status.Ok)
-      response.withOutputStream(StreamIO.copy(stream, _))
-      Future.value(response)
+      val stream = getClass.getResourceAsStream("/html/index.html")
+      respondWithStream(response, stream)
     }
   }
 
   object AssetsHandler extends Service[Request, Response] {
     def apply(request: Request) = {
-      val stream = getClass.getResourceAsStream(request.path)
       val response = Response(request.version, Status.Ok)
-      response.withOutputStream(StreamIO.copy(stream, _))
-      Future.value(response)
+      val stream = getClass.getResourceAsStream(request.path)
+      respondWithStream(response, stream)
     }
   }
 }
