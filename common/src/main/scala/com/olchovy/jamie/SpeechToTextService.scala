@@ -1,6 +1,7 @@
 package com.olchovy.jamie
 
 import java.io.InputStream
+import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.Try
 import com.google.api.gax.rpc.{
@@ -27,7 +28,7 @@ object SpeechToTextService {
 
   val DefaultSampleRate = 44100
 
-  def stream(stream: InputStream)(implicit ec: ExecutionContext): Future[Seq[String]] = {
+  def stream(stream: InputStream)(implicit ec: ExecutionContext): Future[Seq[Transcript]] = {
     val clientOrError = Try(SpeechClient.create())
     val future = for {
       client <- Future.fromTry(clientOrError)
@@ -58,10 +59,22 @@ object SpeechToTextService {
       responses <- responseObserver.future
     } yield for {
       response <- responses
-      result = response.getResultsList.get(0)
+      result <- response.getResultsList.asScala if result.getIsFinal
       alternative = result.getAlternativesList.get(0)
     } yield {
-      alternative.getTranscript
+      val text = alternative.getTranscript
+      val words = alternative.getWordsList.asScala.foldLeft(List.empty[Transcript.WordOccurrence]) { (acc, wordInfo) =>
+        val word = wordInfo.getWord
+        val startTime = wordInfo.getStartTime
+        val seconds = startTime.getSeconds
+        val nanos = startTime.getNanos
+        val millis = secondsAndNanosToMillis(seconds, nanos)
+        acc match {
+          case Nil => Transcript.WordOccurrence(word, millis) :: acc
+          case head :: _ => Transcript.WordOccurrence(word, millis - head.relativeOccurrenceMillis) :: acc
+        }
+      }.reverse
+      Transcript(text, words)
     }
     future.onComplete { _ =>
       clientOrError.foreach(BackgroundResourceUtils.blockUntilShutdown(_))
@@ -98,5 +111,9 @@ object SpeechToTextService {
     } yield {
       client.closeSend()
     }
+  }
+
+  private def secondsAndNanosToMillis(numSeconds: Long, numNanos: Int): Long = {
+    (numSeconds * 1000L) + (numNanos / 1000000L)
   }
 }

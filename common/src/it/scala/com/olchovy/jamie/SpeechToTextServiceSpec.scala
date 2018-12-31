@@ -23,7 +23,7 @@ class SpeechToTextServiceSpec extends AsyncFlatSpec with Matchers with BeforeAnd
     val stream = getClass.getClassLoader.getResourceAsStream("audio/p1219-clip-1-mono.flac")
     for {
       results <- SpeechToTextService.stream(stream)
-      result = results.mkString(" ")
+      result = results.map(_.text).mkString(" ")
     } yield {
       result should (include("rabbit hole") and include("garage") and include("the show"))
     }
