@@ -55,6 +55,7 @@ object GuiPlugin extends AutoPlugin {
       Def.task {
         val log = streams.value.log
         log.info(s"Concating and copying JavaScript sources")
+        IO.createDirectory(jsTargetDirectory.value)
         val target = jsTargetDirectory.value / "main.js"
         val bin = nodeModulesBinDirectory.value
         Process("cat " + jsSourceManifest.value.mkString(" ")) #> target ! log
