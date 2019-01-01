@@ -1,6 +1,7 @@
 package com.olchovy.jamie
 
 import java.io.File
+import java.nio.file.Files
 import scala.sys.process._
 import scala.util.{Try, Success, Failure}
 import org.slf4j.LoggerFactory
@@ -22,13 +23,24 @@ object AudioTranscodingService {
   val SoxiBitsPerSampleOption = "-b"
 
   def transcode(input: File, output: File): Try[Unit] = {
-    val inputString = input.getAbsolutePath
-    val outputString = output.getAbsolutePath
-    val cmd = SoxBinary +: (soxBitsPerSample(16) ++ Seq(inputString, outputString) ++ soxChannels(1))
-    val exitCode = cmd !< processLogger
-    exitCode match {
-      case 0 => Success(Unit)
-      case _ => Failure(new RuntimeException("An error was encountered during the audio transcoding process"))
+    if (output.exists) {
+      logger.warn("Transcoding target file already exists. Deleting target file...")
+      output.delete()
+    }
+    (getFileType(input), getChannels(input)) match {
+      case (Success("flac"), Success(1)) =>
+        logger.info("Transcoding source file already is a single-channel FLAC file. No transcoding necessary.")
+        Files.copy(input.toPath, output.toPath)
+        Success(Unit)
+      case _ =>
+        val inputString = input.getAbsolutePath
+        val outputString = output.getAbsolutePath
+        val cmd = SoxBinary +: (soxBitsPerSample(16) ++ Seq(inputString, outputString) ++ soxChannels(1))
+        val exitCode = cmd !< processLogger
+        exitCode match {
+          case 0 => Success(Unit)
+          case _ => Failure(new RuntimeException("An error was encountered during the audio transcoding process"))
+        }
     }
   }
 

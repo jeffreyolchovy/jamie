@@ -1,11 +1,11 @@
 package com.olchovy.jamie
 
-import java.io.{File, InputStream, ByteArrayInputStream, FileInputStream}
-import scala.concurrent.ExecutionContextExecutor
+import java.io.{File, ByteArrayInputStream, FileInputStream, FileOutputStream}
+import scala.concurrent.{ExecutionContextExecutor, Future => ScalaFuture}
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.finagle.http.exp.{Multipart, MultipartDecoder}
-import com.twitter.io.Buf
+import com.twitter.io.{Buf, StreamIO}
 import com.twitter.util.Future
 import org.json4s._
 import org.json4s.native.Serialization
@@ -16,8 +16,11 @@ class TranscriptHandler(implicit ece: ExecutionContextExecutor) extends Service[
   implicit val formats = DefaultFormats
 
   def apply(request: Request) = {
-    withFileUpload(request, param = "audio-upload") { stream =>
+    withFileUpload(request, param = "audio-upload") { file =>
+      val flacFile = File.createTempFile("xcoded-", ".flac")
       for {
+        _ <- ScalaFuture.fromTry(AudioTranscodingService.transcode(file, flacFile))
+        stream = new FileInputStream(flacFile)
         results <- SpeechToTextService.stream(stream)
         response = Response(request.version, Status.Ok)
       } yield {
@@ -29,14 +32,14 @@ class TranscriptHandler(implicit ece: ExecutionContextExecutor) extends Service[
     }
   }
 
-  private def withFileUpload(request: Request, param: String)(f: InputStream => Future[Response]): Future[Response] = {
+  private def withFileUpload(request: Request, param: String)(f: File => Future[Response]): Future[Response] = {
     MultipartDecoder.decode(request).flatMap(_.files.get(param)) match {
       case Some(fileUploads) if fileUploads.nonEmpty =>
-        val stream = fileUploads.head match {
-          case Multipart.InMemoryFileUpload(buf, _, _, _) => streamFromBuf(buf)
-          case Multipart.OnDiskFileUpload(file, _, _, _) => streamFromFile(file)
+        val file = fileUploads.head match {
+          case Multipart.InMemoryFileUpload(buf, _, _, _) => fileFromBuf(buf)
+          case Multipart.OnDiskFileUpload(file, _, _, _) => file
         }
-        f(stream)
+        f(file)
 
       case _ =>
         val response = Response(request.version, Status.BadRequest)
@@ -44,12 +47,12 @@ class TranscriptHandler(implicit ece: ExecutionContextExecutor) extends Service[
     }
   }
 
-  private def streamFromBuf(buf: Buf): InputStream = {
+  private def fileFromBuf(buf: Buf): File = {
     val bytes = Buf.ByteArray.Shared.extract(buf)
-    new ByteArrayInputStream(bytes)
-  }
-
-  private def streamFromFile(file: File): InputStream = {
-    new FileInputStream(file)
+    val file = File.createTempFile("membuf-", ".bin")
+    val inputStream = new ByteArrayInputStream(bytes)
+    val outputStream = new FileOutputStream(file)
+    StreamIO.copy(inputStream, outputStream)
+    file
   }
 }
