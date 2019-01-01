@@ -1,17 +1,40 @@
 function selectButton(id) {
-  $('label[for="'+ id + '"]').addClass("button-pressed");
+  $('label[for="'+ id + '"]').addClass('button-pressed');
 }
 
 function deselectButtons() {
-  $('label.button').removeClass("button-pressed");
+  $('label.button').removeClass('button-pressed');
+}
+
+function resetPanes() {
+  $('#transcript-pane').empty();
+  $('#entity-pane iframe').attr('src', '');
+}
+
+function displayLoadingAnimation() {
+  resetPanes();
+  $('#transcript-pane').html(
+    '<div class="spinner"><div class="spinner-container"><span class="spinner-animation"></span></div></div>'
+  );
 }
 
 function transcribe(event) {
   let eventTarget = $(event.target);
   let eventTargetId = eventTarget.attr('id');
+  let eventTargetValue = eventTarget.attr('value');
   deselectButtons();
   selectButton(eventTargetId);
-  $("#transcript-pane").html(mockTranscript);
+  displayLoadingAnimation();
+
+  $.getJSON(
+    'assets/data/' + eventTargetValue + '-transcript.json',
+    function(data) {
+      resetPanes();
+      $.each(data, function(index, item) {
+        typeWords(item.words, $('#transcript-pane'));
+       });
+     }
+  );
 }
 
 function upload(event) {
@@ -19,6 +42,7 @@ function upload(event) {
   let eventTargetId = eventTarget.attr('id');
   deselectButtons();
   selectButton(eventTargetId);
+  displayLoadingAnimation();
 
   let formData = new FormData();
   formData.append('audio-upload', eventTarget[0].files[0]);
@@ -30,8 +54,9 @@ function upload(event) {
     processData: false,
     contentType: false,
     success: function(data) {
+      resetPanes();
       $.each(data, function(index, item) {
-        typeWords(item.words, $('transcript-pane'));
+        typeWords(item.words, $('#transcript-pane'));
        });
      }
   });
@@ -45,5 +70,3 @@ function typeWords(words, target) {
   }
   typeIntoTarget(0);
 }
-
-var mockTranscript = '<p>The quick brown <a href="https://en.m.wikipedia.org/wiki/Fox" target="entity-iframe">fox</a> jumped over the lazy dog.</p><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum orci magna, suscipit quis tempus sit amet, congue vel sem. Sed sit amet leo risus. Curabitur viverra nisi ultrices tellus varius lobortis. Praesent ullamcorper et lacus eget convallis. Mauris quis volutpat felis, non pulvinar quam. Nunc at turpis eleifend, ullamcorper nunc ut, malesuada nunc. Aliquam tincidunt rhoncus condimentum. Fusce porttitor felis turpis, quis luctus est volutpat non. Etiam auctor posuere vulputate. Nam faucibus nec metus quis tristique. Aenean imperdiet mauris vel molestie egestas.</p><p>Cras lobortis, elit a dignissim blandit, neque turpis rutrum est, quis facilisis libero arcu ac odio. Sed sollicitudin erat turpis, vel congue augue tincidunt sed. In risus diam, posuere sed tellus in, convallis aliquet dolor. Morbi a urna urna. Etiam semper lorem nec auctor condimentum. Etiam eget turpis quis massa elementum pretium. Pellentesque eu mi et sapien eleifend tempor. Suspendisse blandit diam felis, vel facilisis neque ullamcorper vel.</p><p>The quick brown <a href="https://en.m.wikipedia.org/wiki/Fox" target="entity-iframe">fox</a> jumped over the lazy dog.</p><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum orci magna, suscipit quis tempus sit amet, congue vel sem. Sed sit amet leo risus. Curabitur viverra nisi ultrices tellus varius lobortis. Praesent ullamcorper et lacus eget convallis. Mauris quis volutpat felis, non pulvinar quam. Nunc at turpis eleifend, ullamcorper nunc ut, malesuada nunc. Aliquam tincidunt rhoncus condimentum. Fusce porttitor felis turpis, quis luctus est volutpat non. Etiam auctor posuere vulputate. Nam faucibus nec metus quis tristique. Aenean imperdiet mauris vel molestie egestas.</p><p>Cras lobortis, elit a dignissim blandit, neque turpis rutrum est, quis facilisis libero arcu ac odio. Sed sollicitudin erat turpis, vel congue augue tincidunt sed. In risus diam, posuere sed tellus in, convallis aliquet dolor. Morbi a urna urna. Etiam semper lorem nec auctor condimentum. Etiam eget turpis quis massa elementum pretium. Pellentesque eu mi et sapien eleifend tempor. Suspendisse blandit diam felis, vel facilisis neque ullamcorper vel.</p>'

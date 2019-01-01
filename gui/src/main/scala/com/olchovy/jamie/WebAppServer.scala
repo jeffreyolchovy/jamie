@@ -19,7 +19,7 @@ case class WebAppServer(port: Int)(implicit ece: ExecutionContextExecutor) exten
 
   val service = ExceptionHandlingFilter andThen RoutingService.byMethodAndPathObject {
     case Method.Get -> Root => IndexHandler
-    case Method.Get -> Root / "assets" / ("scripts" | "styles") / _ => AssetsHandler
+    case Method.Get -> Root / "assets" / ("data" | "scripts" | "styles") / _ => AssetsHandler
     case Method.Get -> Root / "assets" / ("scripts" | "styles") / "third-party" / _ => AssetsHandler
     case Method.Get -> Root / "api" / "entities" => new EntitiesHandler
     case (Method.Get | Method.Post) -> Root / "api" / "transcript" => new TranscriptHandler
