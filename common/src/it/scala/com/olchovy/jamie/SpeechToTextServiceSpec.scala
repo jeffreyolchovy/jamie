@@ -28,4 +28,13 @@ class SpeechToTextServiceSpec extends AsyncFlatSpec with Matchers with BeforeAnd
       result should (include("rabbit hole") and include("garage") and include("the show"))
     }
   }
+
+  it should "contain word occurrence information for transcribed audio streams" in {
+    val stream = getClass.getClassLoader.getResourceAsStream("audio/p1218-clip-1-mono.flac")
+    for {
+      results <- SpeechToTextService.stream(stream)
+    } yield {
+      pending
+    }
+  }
 }

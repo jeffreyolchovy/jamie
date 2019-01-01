@@ -63,17 +63,16 @@ object SpeechToTextService {
       alternative = result.getAlternativesList.get(0)
     } yield {
       val text = alternative.getTranscript
-      val words = alternative.getWordsList.asScala.foldLeft(List.empty[Transcript.WordOccurrence]) { (acc, wordInfo) =>
+      val words = alternative.getWordsList.asScala.map { wordInfo =>
         val word = wordInfo.getWord
         val startTime = wordInfo.getStartTime
-        val seconds = startTime.getSeconds
-        val nanos = startTime.getNanos
-        val millis = secondsAndNanosToMillis(seconds, nanos)
-        acc match {
-          case Nil => Transcript.WordOccurrence(word, millis) :: acc
-          case head :: _ => Transcript.WordOccurrence(word, millis - head.relativeOccurrenceMillis) :: acc
+        val endTime = wordInfo.getEndTime
+        val utteranceMillis = {
+          secondsAndNanosToMillis(endTime.getSeconds, endTime.getNanos) -
+          secondsAndNanosToMillis(startTime.getSeconds, startTime.getNanos)
         }
-      }.reverse
+        Transcript.WordOccurrence(word, utteranceMillis)
+      }
       Transcript(text, words)
     }
     future.onComplete { _ =>
