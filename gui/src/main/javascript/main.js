@@ -32,12 +32,16 @@ function transcribe(event) {
 
   $.getJSON(
     'assets/data/' + eventTargetValue + '-transcript.json',
-    function(data) {
-      resetPanes();
-      $.each(data, function(index, item) {
-        typeWords(item.words, $('#transcript-pane'));
-       });
-     }
+    function(data, status, xhr) {
+      xhr.onloadstart = function() {
+        resetPanes();
+        displayLoadingAnimation();
+      };
+      xhr.onload = function() {
+        resetPanes();
+      };
+      typeTranscript(data);
+    }
   );
 }
 
@@ -62,18 +66,44 @@ function upload(event) {
       xhr.onload = function() {
         resetPanes();
       };
-      $.each(data, function(index, item) {
-        typeWords(item.words, $('#transcript-pane'));
-       });
-     }
+    },
+    success: typeTranscript
   });
 }
 
-function typeWords(words, target) {
-  function typeIntoTarget(index) {
-    let item = words[index];
-    target.append(item.word + ' ');
-    setTimeout(typeIntoTarget, item.utteranceMillis, index + 1);
+function typeTranscript(transcripts) {
+  let target = $('#transcript-pane');
+
+  function typeWords(words, callback) {
+    function typeIntoTarget(i) {
+      let item = words[i];
+      target.append(item.word + ' ');
+      setTimeout(
+        function(j) {
+          if ((i == words.length - 1) && callback) {
+            callback();
+          } else if (j < words.length) {
+            typeIntoTarget(j);
+          }
+        },
+        item.utteranceMillis,
+        i + 1
+      );
+    }
+    if (words.length) {
+      typeIntoTarget(0);
+    }
   }
-  typeIntoTarget(0);
+
+  if (transcripts.length > 1) {
+    typeWords(
+      transcripts[0].words,
+      function() { typeTranscript(transcripts.slice(1)); }
+    );
+  } else if (transcripts.length == 1) {
+    typeWords(
+      transcripts[0].words,
+      target
+    );
+  }
 }
