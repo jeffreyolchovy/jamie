@@ -11,6 +11,7 @@ class AudioTranscodingServiceSpec extends FlatSpec with Matchers with TryValues 
     val inputUrl = getClass.getClassLoader.getResource("audio/p1219-clip-1.mp3")
     val inputFile = new File(inputUrl.toURI)
     val outputFile = File.createTempFile("p1219-clip-1-mono_", ".flac")
+    outputFile.delete()
     val result = AudioTranscodingService.transcode(inputFile, outputFile)
     result shouldBe 'isSuccess
     // verify input file info

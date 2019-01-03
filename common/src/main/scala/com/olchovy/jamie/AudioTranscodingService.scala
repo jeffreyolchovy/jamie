@@ -23,10 +23,6 @@ object AudioTranscodingService {
   val SoxiBitsPerSampleOption = "-b"
 
   def transcode(input: File, output: File): Try[Unit] = {
-    if (output.exists) {
-      logger.warn("Transcoding target file already exists. Deleting target file...")
-      output.delete()
-    }
     (getFileType(input), getChannels(input)) match {
       case (Success("flac"), Success(1)) =>
         logger.info("Transcoding source file already is a single-channel FLAC file. No transcoding necessary.")

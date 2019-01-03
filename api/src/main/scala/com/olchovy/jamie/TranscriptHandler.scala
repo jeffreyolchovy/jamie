@@ -17,7 +17,7 @@ class TranscriptHandler(implicit ece: ExecutionContextExecutor) extends Service[
 
   def apply(request: Request) = {
     withFileUpload(request, param = "audio-upload") { file =>
-      val flacFile = File.createTempFile("xcoded-", ".flac")
+      val flacFile = newNonExistentTempFile("xcoded-", ".flac")
       for {
         _ <- ScalaFuture.fromTry(AudioTranscodingService.transcode(file, flacFile))
         stream = new FileInputStream(flacFile)
@@ -36,8 +36,8 @@ class TranscriptHandler(implicit ece: ExecutionContextExecutor) extends Service[
     MultipartDecoder.decode(request).flatMap(_.files.get(param)) match {
       case Some(fileUploads) if fileUploads.nonEmpty =>
         val file = fileUploads.head match {
-          case Multipart.InMemoryFileUpload(buf, _, _, _) => fileFromBuf(buf)
-          case Multipart.OnDiskFileUpload(file, _, _, _) => file
+          case Multipart.InMemoryFileUpload(buf, _, givenName, _) => tmpFileFromBuf(buf, givenName)
+          case Multipart.OnDiskFileUpload(file, _, givenName, _) => tmpFileFromFile(file, givenName)
         }
         f(file)
 
@@ -47,12 +47,33 @@ class TranscriptHandler(implicit ece: ExecutionContextExecutor) extends Service[
     }
   }
 
-  private def fileFromBuf(buf: Buf): File = {
+  private def tmpFileFromFile(inputFile: File, givenName: String): File = {
+    val outputFile = newDerivedTempFile(givenName)
+    val inputStream = new FileInputStream(inputFile)
+    val outputStream = new FileOutputStream(outputFile)
+    StreamIO.copy(inputStream, outputStream)
+    outputFile
+  }
+
+  private def tmpFileFromBuf(buf: Buf, givenName: String): File = {
     val bytes = Buf.ByteArray.Shared.extract(buf)
-    val file = File.createTempFile("membuf-", ".bin")
+    val file = newDerivedTempFile(givenName)
     val inputStream = new ByteArrayInputStream(bytes)
     val outputStream = new FileOutputStream(file)
     StreamIO.copy(inputStream, outputStream)
+    file
+  }
+
+  private def newDerivedTempFile(givenName: String): File = {
+    val i = givenName.lastIndexWhere(_ == '.')
+    File.createTempFile(givenName.slice(0, i) + "-", givenName.slice(i, givenName.size))
+  }
+
+  private def newNonExistentTempFile(prefix: String, suffix: String): File = {
+    val file = File.createTempFile(prefix, suffix)
+    if (file.exists) {
+      file.delete()
+    }
     file
   }
 }
