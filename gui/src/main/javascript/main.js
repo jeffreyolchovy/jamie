@@ -6,13 +6,20 @@ function deselectButtons() {
   $('label.button').removeClass('button-pressed');
 }
 
+function toggleButtons(event) {
+  let eventTarget = $(event.target);
+  let eventTargetId = eventTarget.attr('id');
+  let eventTargetValue = eventTarget.attr('value');
+  deselectButtons();
+  selectButton(eventTargetId);
+}
+
 function resetPanes() {
   $('#transcript-pane').empty();
-  $('#entity-pane iframe').attr('src', '');
+  $('#entity-pane iframe').attr('src', 'about:blank');
 }
 
 function displayLoadingAnimation() {
-  resetPanes();
   $('#transcript-pane').html(
     '<div class="spinner"><div class="spinner-container"><span class="spinner-animation"></span></div></div>'
   );
@@ -20,11 +27,8 @@ function displayLoadingAnimation() {
 
 function transcribe(event) {
   let eventTarget = $(event.target);
-  let eventTargetId = eventTarget.attr('id');
   let eventTargetValue = eventTarget.attr('value');
-  deselectButtons();
-  selectButton(eventTargetId);
-  displayLoadingAnimation();
+  toggleButtons(event);
 
   $.getJSON(
     'assets/data/' + eventTargetValue + '-transcript.json',
@@ -39,10 +43,7 @@ function transcribe(event) {
 
 function upload(event) {
   let eventTarget = $(event.target);
-  let eventTargetId = eventTarget.attr('id');
-  deselectButtons();
-  selectButton(eventTargetId);
-  displayLoadingAnimation();
+  toggleButtons(event);
 
   let formData = new FormData();
   formData.append('audio-upload', eventTarget[0].files[0]);
@@ -53,8 +54,14 @@ function upload(event) {
     data: formData,
     processData: false,
     contentType: false,
-    success: function(data) {
-      resetPanes();
+    beforeSend: function(xhr, settings) {
+      xhr.onloadstart = function() {
+        resetPanes();
+        displayLoadingAnimation();
+      };
+      xhr.onload = function() {
+        resetPanes();
+      };
       $.each(data, function(index, item) {
         typeWords(item.words, $('#transcript-pane'));
        });
