@@ -120,16 +120,21 @@ function typeTranscript(transcripts, entities) {
 function getEntities(transcripts, callback) {
   let text = transcripts.map(function(item) { return item.text; }).join(' ');
   $.getJSON('api/entities?text=%22' + text + '%22', function(entities) {
-    var sortedEntities = entities.sort(function(a, b) {
-      if (a.entity.length > b.entity.length) {
-        return -1;
-      } else if (a.entity.length < b.entity.length) {
-        return 1;
-      } else {
-        return 0;
-      }
-    });
-    callback(entities);
+    callback(
+      entities.map(function(item) {
+        return $.extend(item, {
+          url: item.url.replace("en.wikipedia.org", "en.m.wikipedia.org")
+        });
+      }).sort(function(a, b) {
+        if (a.entity.length > b.entity.length) {
+          return -1;
+        } else if (a.entity.length < b.entity.length) {
+          return 1;
+        } else {
+          return 0;
+        }
+      })
+    );
   });
 }
 
