@@ -32,7 +32,7 @@ function transcribe(event) {
 
   $.getJSON(
     'assets/data/' + eventTargetValue + '-transcript.json',
-    function(data, status, xhr) {
+    function(transcripts, status, xhr) {
       xhr.onloadstart = function() {
         resetPanes();
         displayLoadingAnimation();
@@ -40,7 +40,9 @@ function transcribe(event) {
       xhr.onload = function() {
         resetPanes();
       };
-      typeTranscript(data);
+      getEntities(transcripts, function(entities) {
+        typeTranscript(transcripts, entities);
+      });
     }
   );
 }
@@ -67,23 +69,30 @@ function upload(event) {
         resetPanes();
       };
     },
-    success: typeTranscript
+    success: function(transcripts) {
+      getEntities(transcripts, function(entities) {
+        typeTranscript(transcripts, entities);
+      });
+    }
   });
 }
 
-function typeTranscript(transcripts) {
+function typeTranscript(transcripts, entities) {
   let target = $('#transcript-pane');
+  let node = target[0];
 
   function typeWords(words, callback) {
     function typeIntoTarget(i) {
       let item = words[i];
       target.append(item.word + ' ');
+      node.normalize();
       setTimeout(
         function(j) {
-          if ((i == words.length - 1) && callback) {
+          if (callback && (i == words.length - 1)) {
             callback();
           } else if (j < words.length) {
             typeIntoTarget(j);
+            surfaceEntities(entities);
           }
         },
         item.utteranceMillis,
@@ -92,6 +101,7 @@ function typeTranscript(transcripts) {
     }
     if (words.length) {
       typeIntoTarget(0);
+      surfaceEntities(entities);
     }
   }
 
@@ -102,8 +112,52 @@ function typeTranscript(transcripts) {
     );
   } else if (transcripts.length == 1) {
     typeWords(
-      transcripts[0].words,
-      target
+      transcripts[0].words
     );
   }
+}
+
+function getEntities(transcripts, callback) {
+  let text = transcripts.map(function(item) { return item.text; }).join(' ');
+  $.getJSON('api/entities?text=%22' + text + '%22', function(entities) {
+    var sortedEntities = entities.sort(function(a, b) {
+      if (a.entity.length > b.entity.length) {
+        return -1;
+      } else if (a.entity.length < b.entity.length) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+    callback(entities);
+  });
+}
+
+function surfaceEntities(entities) {
+  let searchTarget = $('#transcript-pane');
+
+  function helper(node) {
+    var skip = 0;
+    if (node.nodeType == 3) {
+      $.each(entities, function(index, item) {
+        let pos = node.data.indexOf(item.entity);
+        if (pos >= 0) {
+          let anchorText = node.splitText(pos);
+          anchorText.splitText(item.entity.length);
+          $(anchorText).wrap('<a class="entity" href="' + item.url + '" target="entity-iframe"></a>');
+          skip++;
+        }
+      });
+    } else if (node.nodeType == 1 && node.childNodes) {
+      for (var i = 0; i < node.childNodes.length; ++i) {
+        let child = node.childNodes[i];
+        if (!$(child).hasClass('entity')) {
+          i += helper(child);
+        }
+      }
+    }
+    return skip;
+  }
+
+  searchTarget.each(function() { helper(this); });
 }

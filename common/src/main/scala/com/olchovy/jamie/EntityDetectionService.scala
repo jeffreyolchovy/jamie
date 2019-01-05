@@ -42,7 +42,7 @@ object EntityDetectionService {
     } yield {
       val url = metadata.get(EntityMetadataKeys.WikipediaUrl) match {
         case Some(value) => new URL(value)
-        case None => googleSearchUrl(name)
+        case None => searchEngineUrl(name)
       }
       name -> url
     })(scala.collection.breakOut)
@@ -52,7 +52,7 @@ object EntityDetectionService {
     future
   }
 
-  private def googleSearchUrl(query: String): URL = {
-    new URL(s"https://www.google.com/search?q=%22$query%22")
+  private def searchEngineUrl(query: String): URL = {
+    new URL(s"https://en.wikipedia.org/w/index.php?search=%22$query%22")
   }
 }

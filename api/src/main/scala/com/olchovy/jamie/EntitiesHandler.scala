@@ -17,7 +17,11 @@ class EntitiesHandler(implicit ece: ExecutionContextExecutor) extends Service[Re
       result <- EntityDetectionService(text)
       response = Response(request.version, Status.Ok)
     } yield {
-      val jsonString = Serialization.write(result.mapValues(_.toString))
+      val jsonString = Serialization.write(
+        result.map {
+          case (entity, url) => Map("entity" -> entity, "url" -> url.toString)
+        }
+      )
       response.setContentType("application/json")
       response.setContentString(jsonString)
       response
