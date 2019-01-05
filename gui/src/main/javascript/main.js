@@ -108,7 +108,7 @@ function typeTranscript(transcripts, entities) {
   if (transcripts.length > 1) {
     typeWords(
       transcripts[0].words,
-      function() { typeTranscript(transcripts.slice(1)); }
+      function() { typeTranscript(transcripts.slice(1), entities); }
     );
   } else if (transcripts.length == 1) {
     typeWords(
