@@ -3,7 +3,7 @@ Programmatically transcribe audio streams and surface the well-known entities co
 
 Inspired by producer Jamie Vernon's incidental annotating and fact-checking responsibilities on the [Joe Rogan Experience](http://podcasts.joerogan.net/) podcast.
 
-![MVP GUI screenshot](https://github.com/jeffreyolchovy/jamie/raw/master/screenshots/mvp.png)
+![MVP GUI screencap](https://github.com/jeffreyolchovy/jamie/raw/master/screenshots/mvp-10fps.gif)
 
 ## Installation requirements
 - [sbt 1.x](https://www.scala-sbt.org)
