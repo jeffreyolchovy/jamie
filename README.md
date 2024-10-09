@@ -1,7 +1,5 @@
-# "Pull that up, Jamie"
+# Automated Podcast Transcription
 Programmatically transcribe audio streams and surface the well-known entities contained therein.
-
-Inspired by producer Jamie Vernon's incidental annotating and fact-checking responsibilities on the [Joe Rogan Experience](http://podcasts.joerogan.net/) podcast.
 
 ![MVP GUI screencap](https://github.com/jeffreyolchovy/jamie/raw/master/screenshots/mvp-10fps.gif)
 
